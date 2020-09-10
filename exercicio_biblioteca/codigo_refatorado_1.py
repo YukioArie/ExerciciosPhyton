@@ -1,10 +1,40 @@
+from datetime import datetime, timedelta
 class Cliente:
     def __init__(self, nome, matricula, endereco, telefone):
         self.nome = nome
         self.matricula = matricula
         self.endereco = endereco
         self.telefone = telefone
-        self.ativo = True
+        self.livros_emprestados = []
+        self.livros_entregados = []
+
+    def is_inadimplente(self, data):
+        for emprestimo in self.livros_emprestados:
+            if data < emprestimo.data_entrega:
+                return True
+            else:
+                return False
+
+    def is_cadastrado(self, lista_de_clientes):
+        for cliente in lista_de_clientes:
+            if cliente.matricula == self.matricula:
+                return True
+            else:
+                return False
+    def fazer_emprestimo(self, biblioteca, livro, data_entrega):
+        if self.is_cadastrado(biblioteca.lista_de_clientes) and livro.is_cadastrado(biblioteca.lista_de_livros) and (self.is_inadimplente(biblioteca.data_biblioteca) != False) and len(self.livros_emprestados) < 2:
+            biblioteca.emprestimos.append(Emprestimo(livro, self, biblioteca.data_biblioteca, data_entrega))
+            self.livros_emprestados.append(Emprestimo(livro, self, biblioteca.data_biblioteca, data_entrega))
+            biblioteca.lista_de_livros.remove(livro)
+        else:
+            print("Emprestimo n efetuado")
+
+    def devolver_livro(self, biblioteca, livro, data_entrega):
+        if livro.is_emprestado(self.livros_emprestados):
+            biblioteca.emprestimos.remove(Emprestimo(livro, self, biblioteca.data_biblioteca, data_entrega))
+            self.livros_emprestados.remove(Emprestimo(livro, self, biblioteca.data_biblioteca, data_entrega))
+            self.livros_entregados.append(livro, biblioteca, data_entrega)
+            biblioteca.cadastrar_livro(livro)
 
     
 class Livro:
@@ -14,57 +44,82 @@ class Livro:
         self.autor = autor
         self.edicao = edicao
         self.isbn = isbn
+    
+    def is_emprestado(self, emprestimos):
+        for emprestimo in emprestimos:
+            if emprestimo.livro.codigo == self.codigo:
+                return True
+            else:
+                return False
 
+    def is_cadastrado(self, lista_de_livros):
+        for livro in lista_de_livros:
+            if livro.codigo == self.codigo:
+                return True
+            else:
+                return False
 class Biblioteca:
     def __init__(self):
         self.lista_de_clientes = []
         self.lista_de_livros = []
         self.emprestimos = []
-    def listar_livros_emprestados(self):
-        for emprestimo in emprestimos:
-            return emprestimo.livro.nome
-
-    def cliente_ativo(self, cliente):
-        quantidade = 0
-        for emprestimo in emprestimos:
-            if self.cliente == emprestimo.cliente:
-                quantidade += 1
-        if quantidade >= 2:
-            self.cliente.ativo = False
+        self.data_biblioteca = datetime.strptime('2020-05-05', '%Y-%m-%d')
     
-    def cliente_esta_cadastrado(cliente):
-        if cliente not in lista_de_clientes:
-            return false
-        else:
-            return true
-    def livro_esta_cadastrado(self, livro):
-        if livro not in lista_de_livros:
-            return false
-        else:
-            return true
+    def set_dia(self, data):
+        self.data_biblioteca = data
+    
+    def listar_livros_emprestados(self):
+        x = []
+        for emprestimo in self.emprestimos:
+            x.append(emprestimo.livro.nome)
+        return x
 
-    def fazer_emprestimo(self, cliente, livro, data_emprestimo, data_entrega):
-        if cliente_esta_cadastrado(cliente) and livro_esta_cadastrado(livro) and cliente.ativo:
-            self.emprestimos.append(Emprestimo(cliente, livro, data_emprestimo, data_entrega))
-            self.lista_de_livros.remove(livro)
+    # def is_livro_cadastrado(self, livro):
+    #     for lista_livro in self.lista_de_livros:
+    #         if lista_livro == livro:
+    #             return True
+    #         else:
+    #             return False
+
+    # def fazer_emprestimo(self, cliente, livro, data_entrega):
+    #     if cliente.is_cadastrado(self.lista_de_clientes) and livro.is_cadastrado(self.lista_de_livros) and (cliente.is_inadimplente(self.data_biblioteca) != False):
+    #         self.emprestimos.append(Emprestimo(livro, cliente, self.data_biblioteca, data_entrega))
+    #         cliente.livros_emprestados.append(Emprestimo(livro, cliente, self.data_biblioteca, data_entrega))
+    #         #self.lista_de_livros.remove(livro)
+    #     else:
+    #         print("Emprestimo n efetuado")
             
-    def cadastrar_clientes(cliente):
-        if cliente_esta_cadastrado(cliente):
-            lista_de_clientes.append(cliente)
+    def cadastrar_clientes(self, cliente):
+        if cliente.is_cadastrado(self.lista_de_clientes):
+            print('cliente ja cadastrado')
         else:
-            print('cliente cadastrado')
+            self.lista_de_clientes.append(cliente)
 
-    def cadastrar_livro(livro):
-        if livro_esta_cadastrado(livro):
-            lista_de_livros.append(livro)
+    def cadastrar_livro(self ,livro):
+        if livro.is_cadastrado(self.lista_de_livros) and livro.is_emprestado(self.emprestimos):
+            print('livro ja cadastrado')
         else:
-            print('livro cadastrado')
-                
+            self.lista_de_livros.append(livro)
+
 class Emprestimo:
-    def __init__(self, Livro, Cliente, data_emprestimo, data_entrega):
+    def __init__(self, livro, cliente, data_emprestimo, data_entrega):
         self.data_entrega = data_entrega
         self.data_emprestimo = data_emprestimo
-        self.cliente = Cliente()
-        self.livro = Livro()
+        self.cliente = cliente
+        self.livro = livro
 
 
+b = Biblioteca()
+yukio = Cliente("yukio", 123456, "Pinhalao",22998813788)
+maria = Cliente("maria", 55555, "asd", 22333665)
+a_visao = Livro(1245, "A visao", "joao", 12, 6598)
+a_pedra = Livro(1255, "A pedra", "paulo", 120, 656984)
+b.cadastrar_clientes(yukio)
+b.cadastrar_livro(a_visao)
+b.cadastrar_livro(a_pedra)
+yukio.fazer_emprestimo(b, a_visao, datetime.strptime('2020-05-15', '%Y-%m-%d'))
+yukio.fazer_emprestimo(b, a_pedra, datetime.strptime('2020-05-15', '%Y-%m-%d'))
+print(b.lista_de_clientes)
+print(b.lista_de_livros)
+print(b.emprestimos)
+print(b.listar_livros_emprestados())
