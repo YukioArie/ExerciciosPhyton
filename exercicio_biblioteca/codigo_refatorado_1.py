@@ -8,12 +8,12 @@ class Cliente:
         self.livros_emprestados = []
         self.livros_entregados = []
 
-    def is_inadimplente(self, data):
+    def is_inadimplente(self, data_biblioteca):
         for emprestimo in self.livros_emprestados:
-            if data < emprestimo.data_entrega:
-                return True
-            else:
+            if data_biblioteca <= emprestimo.data_prevista_entrega or len(emprestimo) == 0:
                 return False
+            else:
+                return True
 
     def is_cadastrado(self, lista_de_clientes):
         for cliente in lista_de_clientes:
@@ -21,19 +21,19 @@ class Cliente:
                 return True
             else:
                 return False
-    def fazer_emprestimo(self, biblioteca, livro, data_entrega):
+    def fazer_emprestimo(self, biblioteca, livro, data_prevista_entrega):
         if self.is_cadastrado(biblioteca.lista_de_clientes) and livro.is_cadastrado(biblioteca.lista_de_livros) and (self.is_inadimplente(biblioteca.data_biblioteca) != False) and len(self.livros_emprestados) < 2:
-            biblioteca.emprestimos.append(Emprestimo(livro, self, biblioteca.data_biblioteca, data_entrega))
-            self.livros_emprestados.append(Emprestimo(livro, self, biblioteca.data_biblioteca, data_entrega))
+            biblioteca.emprestimos.append(Emprestimo(livro, self, biblioteca.data_biblioteca, data_prevista_entrega))
+            self.livros_emprestados.append(Emprestimo(livro, self, biblioteca.data_biblioteca, data_prevista_entrega))
             biblioteca.lista_de_livros.remove(livro)
         else:
             print("Emprestimo n efetuado")
 
-    def devolver_livro(self, biblioteca, livro, data_entrega):
-        if livro.is_emprestado(self.livros_emprestados):
-            biblioteca.emprestimos.remove(Emprestimo(livro, self, biblioteca.data_biblioteca, data_entrega))
-            self.livros_emprestados.remove(Emprestimo(livro, self, biblioteca.data_biblioteca, data_entrega))
-            self.livros_entregados.append(livro, biblioteca, data_entrega)
+    def devolver_livro(self, biblioteca, livro):
+        if livro.is_emprestado(self.livros_emprestados):         
+            biblioteca.emprestimos.remove(livro.verificar_livro_id(biblioteca.emprestimos))
+            self.livros_emprestados.remove(livro.verificar_livro_id(self.livros_emprestados))
+            self.livros_entregados.append(livro, biblioteca.data_biblioteca) 
             biblioteca.cadastrar_livro(livro)
 
     
@@ -44,6 +44,11 @@ class Livro:
         self.autor = autor
         self.edicao = edicao
         self.isbn = isbn
+    
+    def verificar_livro_id(self, emprestimos):
+        for emprestimo in emprestimos:
+            if emprestimo.livro.codigo == self.codigo:
+                return emprestimo 
     
     def is_emprestado(self, emprestimos):
         for emprestimo in emprestimos:
@@ -66,7 +71,10 @@ class Biblioteca:
         self.data_biblioteca = datetime.strptime('2020-05-05', '%Y-%m-%d')
     
     def set_dia(self, data):
-        self.data_biblioteca = data
+        if data > self.data_biblioteca:
+            self.data_biblioteca = data
+        else:
+            print("Não é possível setar o dia q ja passou, pois sua maquina do tempo n volta para o passado")
     
     def listar_livros_emprestados(self):
         x = []
@@ -102,9 +110,9 @@ class Biblioteca:
             self.lista_de_livros.append(livro)
 
 class Emprestimo:
-    def __init__(self, livro, cliente, data_emprestimo, data_entrega):
-        self.data_entrega = data_entrega
+    def __init__(self, livro, cliente, data_emprestimo, data_prevista_entrega):
         self.data_emprestimo = data_emprestimo
+        self.data_prevista_entrega = data_prevista_entrega
         self.cliente = cliente
         self.livro = livro
 
